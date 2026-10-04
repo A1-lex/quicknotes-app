@@ -221,3 +221,13 @@ footer {
     flex-wrap: wrap;
   }
 }
+
+/* ---------- Clear all button ---------- */
+#clear-all-btn {
+  background-color: #b3261e;
+  margin-bottom: 12px;
+}
+
+#clear-all-btn:hover {
+  background-color: #8c1d18;
+}
