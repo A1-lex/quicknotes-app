@@ -2,15 +2,31 @@
 const noteForm = document.querySelector("#note-form");
 const noteInput = document.querySelector("#note-input");
 const noteCategory = document.querySelector("#note-category");
+const searchInput = document.querySelector("#search-input");
 const notesList = document.querySelector("#notes-list");
 const noteCount = document.querySelector("#note-count");
 const errorMessage = document.querySelector("#error-message");
 
 const MAX_CHARS = 200;
+const STORAGE_KEY = "quicknotes";
 
 // ---------- Data ----------
-let notes = [];
-let nextId = 1;
+let notes = loadNotes();
+let nextId = notes.length > 0 ? Math.max(...notes.map((n) => n.id)) + 1 : 1;
+
+// ---------- Storage ----------
+function saveNotes() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+}
+
+function loadNotes() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return Array.isArray(saved) ? saved : [];
+  } catch (error) {
+    return [];
+  }
+}
 
 // ---------- Count message ----------
 function updateCount() {
@@ -26,6 +42,7 @@ function updateCount() {
 // ---------- Delete ----------
 function deleteNote(id) {
   notes = notes.filter((note) => note.id !== id);
+  saveNotes();
   render();
 }
 
@@ -33,7 +50,19 @@ function deleteNote(id) {
 function render() {
   notesList.textContent = "";
 
-  for (const note of notes) {
+  const search = searchInput.value.trim().toLowerCase();
+  const visibleNotes = notes.filter((note) =>
+    note.text.toLowerCase().includes(search)
+  );
+
+  if (search !== "" && visibleNotes.length === 0) {
+    const li = document.createElement("li");
+    li.classList.add("empty-message");
+    li.textContent = "No notes match your search.";
+    notesList.append(li);
+  }
+
+  for (const note of visibleNotes) {
     const li = document.createElement("li");
     li.classList.add("note", `category-${note.category}`);
 
@@ -91,11 +120,15 @@ noteForm.addEventListener("submit", (event) => {
   };
 
   notes.push(note);
+  saveNotes();
   render();
 
   noteInput.value = "";
   noteInput.focus();
 });
+
+// ---------- Search ----------
+searchInput.addEventListener("input", render);
 
 // ---------- Initial render ----------
 render();
